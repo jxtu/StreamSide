@@ -30,10 +30,11 @@ import os
 import re
 from typing import List, Dict, Optional, Tuple, Callable, Set, Union
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QKeySequence, QTextCursor, QTextCharFormat, QFont
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QMainWindow, QAction, qApp, QFileDialog, QHBoxLayout, \
-    QMessageBox, QGridLayout, QTextEdit, QCompleter, QLineEdit, QDialog, QPushButton, QCheckBox, QPlainTextEdit, QShortcut, QStatusBar, QInputDialog, QVBoxLayout
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QKeySequence, QTextCursor, QTextCharFormat, QFont
+from PyQt6.QtGui import QAction, QShortcut
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QMainWindow, QFileDialog, QHBoxLayout, \
+    QMessageBox, QGridLayout, QTextEdit, QCompleter, QLineEdit, QDialog, QPushButton, QCheckBox, QPlainTextEdit, QStatusBar, QInputDialog, QVBoxLayout
 
 from streamside.struct import Graph, OffsetMap, Offset, penman_reader
 
@@ -118,8 +119,8 @@ class ConceptDialog(InputDialog):
     def check_attribute(self):
         self.ck_attr.setChecked(not self.ck_attr.isChecked())
 
-    def exec_(self) -> Optional[str]:
-        super().exec_()
+    def exec(self) -> Optional[str]:
+        super().exec()
         c = self.ledit.text().strip()
         return c if c and self.ok else None
 
@@ -210,8 +211,8 @@ class RelationDialog(InputDialog):
     def check_inverse(self):
         self.inverse.setChecked(not self.inverse.isChecked())
 
-    def exec_(self) -> Optional[Tuple[str, bool]]:
-        super().exec_()
+    def exec(self) -> Optional[Tuple[str, bool]]:
+        super().exec()
         if self.ok:
             label = self.ledit.text().strip()
             if not label: return None
@@ -305,7 +306,7 @@ class GraphAnnotator(QMainWindow):
 
     def _init_annotation(self, layout: QGridLayout):
         # text
-        self.lb_text.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.lb_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.lb_text.setWordWrap(True)
 
         w = QWidget()
@@ -342,7 +343,7 @@ class GraphAnnotator(QMainWindow):
         menu.addAction(action('Save', 'Ctrl+s', self.menu_file_save))
         menu.addSeparator()
         menu.addAction(action('About', 'Ctrl+i', self.menu_file_about))
-        menu.addAction(action('Quit', 'Ctrl+q', qApp.quit))
+        menu.addAction(action('Quit', 'Ctrl+q', QApplication.quit))
 
         # edit
         menu = menubar.addMenu('Edit')
@@ -386,7 +387,7 @@ class GraphAnnotator(QMainWindow):
 
             if os.path.exists(json_file):
                 msg = 'Annotation exists for the selected text file. Opening the annotation file instead.'
-                message_box(msg, QMessageBox.Ok)
+                message_box(msg, QMessageBox.StandardButton.Ok)
                 open_json(json_file)
             else:
                 fin = open(txt_file)
@@ -405,7 +406,7 @@ class GraphAnnotator(QMainWindow):
 
             if os.path.exists(json_file):
                 msg = 'Annotation exists for the selected text file. Opening the annotation file instead.'
-                message_box(msg, QMessageBox.Ok)
+                message_box(msg, QMessageBox.StandardButton.Ok)
                 open_json(json_file)
             else:
                 self.graphs = penman_reader(penman_file)
@@ -448,9 +449,9 @@ class GraphAnnotator(QMainWindow):
         msg = QMessageBox()
         text = 'StreamSide v{} developed by Emory NLP\nhttps://github.com/emorynlp/StreamSide\nContact: jinho.choi@emory.edu'.format(self.VERSION)
         msg.setText(text)
-        msg.setIcon(QMessageBox.Information)
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
+        msg.setIcon(QMessageBox.Icon.Information)
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg.exec()
 
     def closeEvent(self, event):
         self.menu_file_save()
@@ -463,7 +464,7 @@ class GraphAnnotator(QMainWindow):
         graph = self.current_graph
         tokens = graph.get_tokens(self.selected_text_spans)
         text = ' '.join(tokens) if attribute else '-'.join(tokens).lower()
-        name = ConceptDialog(self, 'Create', text, attribute).exec_()
+        name = ConceptDialog(self, 'Create', text, attribute).exec()
         ctype = 'Attribute' if attribute else 'Concept'
 
         if name:
@@ -492,7 +493,7 @@ class GraphAnnotator(QMainWindow):
         graph = self.current_graph
         parent_id = self.selected_parent[0]
         child_id = self.selected_child[0]
-        t = RelationDialog(self, 'Create a relation', parent_id, child_id).exec_()
+        t = RelationDialog(self, 'Create a relation', parent_id, child_id).exec()
         if t:
             label = t[0]
             referent = t[1]
@@ -546,7 +547,7 @@ class GraphAnnotator(QMainWindow):
         if type(sel) is str:
             c = graph.get_concept(sel)
             if c:
-                name = ConceptDialog(self, 'Update', c.name, c.attribute).exec_()
+                name = ConceptDialog(self, 'Update', c.name, c.attribute).exec()
                 if name:
                     c.name = name
                     updated = True
@@ -555,7 +556,7 @@ class GraphAnnotator(QMainWindow):
             label, parent_id, child_id = sel[0], sel[1], sel[2]
             for rid, r in graph.parent_relations(child_id):
                 if r.label == label and r.parent_id == parent_id:
-                    name = RelationDialog(self, 'Update the relation', parent_id, child_id, label, True).exec_()
+                    name = RelationDialog(self, 'Update the relation', parent_id, child_id, label, True).exec()
                     if name:
                         r.label = name[0]
                         self.statusbar.showMessage('Update relation: {}({}, {})'.format(label, parent_id, child_id))
@@ -825,8 +826,8 @@ class GraphAnnotator(QMainWindow):
         def set_color(c, color):
             if c is None: return
             cid, begin = c
-            cursor.setPosition(begin, QTextCursor.MoveAnchor)
-            cursor.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor, len(cid))
+            cursor.setPosition(begin, QTextCursor.MoveMode.MoveAnchor)
+            cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor, len(cid))
             cursor.insertHtml('<span style="background-color:{};">{}</span>'.format(color, cid))
 
         def find_offset_in_graph(cid: str) -> int:
@@ -872,10 +873,10 @@ class GraphAnnotator(QMainWindow):
 def message_box(text: str, icon: int, default_button: int = -1) -> int:
     msg = QMessageBox()
     msg.setText(text)
-    msg.setIcon(QMessageBox.Critical)
+    msg.setIcon(QMessageBox.Icon.Critical)
     msg.setStandardButtons(icon)
     if default_button != -1: msg.setDefaultButton(default_button)
-    return msg.exec_()
+    return msg.exec()
 
 
 def current_time():
@@ -893,7 +894,7 @@ def main():
     app = QApplication([])
     gui = GraphAnnotator(args.resource, args.schema, args.annotator)
     gui.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
