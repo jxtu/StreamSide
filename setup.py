@@ -4,7 +4,7 @@ with open('README.md') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='streamside',
+    name='streamside2',
     version='0.5',
     scripts=[],
     author='Jinho D. Choi',
@@ -12,10 +12,10 @@ setuptools.setup(
     description='Meaning Representation Annotation Toolkit',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/emorynlp/StreamSide',
+    url='https://github.com/jxtu/StreamSide',
     packages=setuptools.find_packages(),
     install_requires=[
-         'PyQt5==5.15.4'
+         'PyQt6'
      ],
      classifiers=[
          'Programming Language :: Python :: 3',
